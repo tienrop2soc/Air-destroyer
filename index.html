@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#04061a">
+  <title>Air Destroyer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="240" height="360" aria-label="Juego Air Destroyer"></canvas>
+    <div id="hudbtns">
+      <button id="btnPause" aria-label="Pausa">II</button>
+      <button id="btnMute" aria-label="Sonido">♪</button>
+      <button id="btnBomb" aria-label="Bomba">BOMBA</button>
+    </div>
+  </div>
+
+  <!-- Menú principal -->
+  <div id="menu" class="screen">
+    <div class="panel">
+      <h1>AIR<br>DESTROYER</h1>
+      <p class="tag">Defiende la Tierra de ovnis y alienígenas</p>
+
+      <h2>1 · Elige tu nave</h2>
+      <div class="shipPick">
+        <div id="shipBig"></div>
+        <div class="shipInfo"><b id="shipName"></b><span id="shipDesc"></span></div>
+      </div>
+      <div id="ships"></div>
+
+      <h2>2 · Elige el nivel</h2>
+      <div id="levels"></div>
+      <div id="startMode"></div>
+
+      <button id="btnPlay" class="big">▶ JUGAR</button>
+
+      <div class="help">
+        <b>Controles</b> · Mover: flechas / WASD o arrastra el dedo · Disparo automático ·
+        Bomba: ESPACIO / B · Pausa: P · Sonido: M<br>
+        Cada <b>5 minutos</b> aparece un jefe. Al destruirlo tus armas suben de nivel, pero los enemigos y jefes también se vuelven más duros.
+      </div>
+      <div class="foot">
+        <span id="totals"></span>
+        <span class="footBtns">
+          <button id="menuMute" class="link"></button>
+          <button id="btnReset" class="link">BORRAR PROGRESO</button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pausa -->
+  <div id="pause" class="screen hidden">
+    <div class="panel small">
+      <h1 class="mid">PAUSA</h1>
+      <button id="btnResume" class="big">▶ CONTINUAR</button>
+      <button id="btnQuit" class="big alt">MENÚ PRINCIPAL</button>
+    </div>
+  </div>
+
+  <!-- Fin de partida -->
+  <div id="over" class="screen hidden">
+    <div class="panel small">
+      <h1 class="mid red">GAME OVER</h1>
+      <div id="overNew" class="newrec hidden">¡NUEVO RÉCORD!</div>
+      <div id="overStats"></div>
+      <button id="btnRetry" class="big">REINTENTAR</button>
+      <button id="btnMenu" class="big alt">MENÚ PRINCIPAL</button>
+    </div>
+  </div>
+
+  <script src="js/balance.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
