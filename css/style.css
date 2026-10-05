@@ -272,3 +272,13 @@ input[type=range]::-moz-range-track { height: 10px; background: #070b2a; border:
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 30px; margin-top: -12px; background: var(--gold); border: 3px solid #fff2b0; box-shadow: 0 3px 0 #a06a00; }
 input[type=range]::-moz-range-thumb { width: 16px; height: 24px; background: var(--gold); border: 3px solid #fff2b0; border-radius: 0; }
 input[type=range]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* Botón de ajustes siempre visible arriba del menú */
+.panel { position: relative; }
+.gear {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  font-size: 9px; padding: 10px 12px; color: var(--text); background: #1a2670;
+  border: 2px solid #4a5cd0; cursor: pointer; touch-action: manipulation;
+}
+.gear:hover { background: #26359c; }
+@media (max-width: 420px) { .gear { font-size: 8px; padding: 8px 9px; top: 8px; right: 8px; } }

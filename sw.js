@@ -1,6 +1,6 @@
 /* Service worker: la app funciona sin conexión.
  * Sube VERSION cuando cambies archivos para que los móviles descarguen la nueva versión. */
-const VERSION = 'air-destroyer-v7';
+const VERSION = 'air-destroyer-v8';
 const SHELL = [
   './', './index.html', './css/style.css', './manifest.webmanifest',
   './js/balance.js', './js/sprites.js', './js/audio.js', './js/game.js', './js/pwa.js',
@@ -19,23 +19,18 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Archivos propios: caché primero y actualización en segundo plano.
-// Otros orígenes (fuente de Google): red con respaldo en caché.
+// Archivos propios: red primero (así las actualizaciones llegan al abrir con conexión)
+// y caché como respaldo sin conexión. La fuente de Google: red con respaldo en caché.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
     e.respondWith(
-      caches.open(VERSION).then((cache) =>
-        cache.match(req, { ignoreSearch: true }).then((hit) => {
-          const fresh = fetch(req).then((res) => {
-            if (res && res.ok) cache.put(req, res.clone());
-            return res;
-          }).catch(() => hit);
-          return hit || fresh;
-        })
-      )
+      fetch(req, { cache: 'no-cache' }).then((res) => {
+        if (res && res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
+        return res;
+      }).catch(() => caches.open(VERSION).then((c) => c.match(req, { ignoreSearch: true })))
     );
   } else if (/fonts\.(googleapis|gstatic)\.com$/.test(url.hostname)) {
     e.respondWith(

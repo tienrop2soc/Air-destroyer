@@ -1455,6 +1455,7 @@
     showScreen(settingsFrom);
   });
   document.getElementById('btnSettings').addEventListener('click', () => openSettings('menu'));
+  document.getElementById('btnSettingsTop').addEventListener('click', () => openSettings('menu'));
   document.getElementById('btnPauseSettings').addEventListener('click', () => openSettings('pause'));
 
   /* --- Copia de seguridad --- */
