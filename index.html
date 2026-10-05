@@ -100,6 +100,15 @@
       </div>
       <p class="note">Cuánto se mueve la nave al arrastrar el dedo (o con las teclas). Más alta = la nave recorre más pantalla con menos movimiento. 100 % es el valor normal.</p>
 
+      <h2>Pantalla</h2>
+      <label class="setting" id="setTopLabel"><span>Margen superior</span><output id="outTop"></output></label>
+      <div class="ctl" id="setTop" data-key="top" data-min="0" data-max="80" data-step="4" data-unit=" px">
+        <button type="button" class="step minus" aria-label="Menos margen superior">−</button>
+        <div class="bar" role="slider" tabindex="0" aria-label="Margen superior" aria-valuemin="0" aria-valuemax="80"><div class="fill"></div></div>
+        <button type="button" class="step plus" aria-label="Más margen superior">+</button>
+      </div>
+      <p class="note">Baja todo el juego (marcadores, vidas, jefe) para que no lo tape la barra de estado ni el efecto de cristal del sistema. Súbelo si aún no lees la parte de arriba.</p>
+
       <button id="btnSettingsReset" class="big alt slim">RESTABLECER</button>
       <button id="btnSettingsClose" class="big">VOLVER</button>
     </div>

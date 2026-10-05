@@ -95,10 +95,15 @@
   /* ================================================================== */
   const SAVE_KEY = 'airDestroyer.save.v1';
 
+  // Margen extra arriba (px): en pantallas táctiles la barra de estado / efecto cristal del sistema tapa el HUD.
+  function topDefault() {
+    try { return window.matchMedia('(pointer: coarse)').matches ? 24 : 0; } catch (e) { return 0; }
+  }
+
   function defaultSave() {
     return {
       v: 1, ship: 0, level: 0, muted: false, unlocked: 1,
-      settings: { sfx: 70, music: 70, sens: 100 },
+      settings: { sfx: 70, music: 70, sens: 100, top: topDefault() },
       levels: LEVELS.map((l) => ({ best: 0, tier: l.baseTier, bosses: 0, plays: 0 })),
       totals: { bosses: 0, kills: 0, plays: 0, time: 0 },
     };
@@ -116,6 +121,7 @@
       d.settings.sfx = num(st.sfx, 0, 100, 70);
       d.settings.music = num(st.music, 0, 100, 70);
       d.settings.sens = num(st.sens, 50, 200, 100);
+      d.settings.top = num(st.top, 0, 80, d.settings.top);
     }
     d.unlocked = Math.min(LEVELS.length, Math.max(1, s.unlocked | 0));
     if (Array.isArray(s.levels)) {
@@ -150,6 +156,7 @@
       persist();
       Sound.setMuted(save.muted);
       Sound.setVolumes(save.settings.sfx, save.settings.music);
+      applyTop();
       return true;
     } catch (e) { return false; }
   }
@@ -164,6 +171,8 @@
   let save = loadSave();
   Sound.setMuted(save.muted);
   Sound.setVolumes(save.settings.sfx, save.settings.music);
+  function applyTop() { document.documentElement.style.setProperty('--top-extra', save.settings.top + 'px'); }
+  applyTop();
 
   /* ================================================================== */
   /* Utilidades                                                         */
@@ -245,7 +254,9 @@
   // se ensancha para ocupar toda la pantalla; en vertical (iPhone) no cambia.
   // El ancho solo cambia fuera de partida, para no mover a los enemigos a mitad de nivel.
   function layout(allowWidthChange) {
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const stage = document.getElementById('stage');
+    const topInset = parseFloat(getComputedStyle(stage).paddingTop) || 0;   // zona tapada por la barra del sistema
+    const vw = window.innerWidth, vh = Math.max(200, window.innerHeight - topInset);
     if (allowWidthChange) {
       const wide = vw / vh > 0.75;
       const nw = wide ? clamp(Math.ceil(vw / (vh / H)), BASE_W, 560) : BASE_W;
@@ -1375,7 +1386,7 @@
     }
     const t = save.totals;
     document.getElementById('totals').textContent =
-      'Jefes derrotados: ' + t.bosses + '  ·  Enemigos destruidos: ' + t.kills + '  ·  Partidas: ' + t.plays + '  ·  Tiempo: ' + fmtTime(t.time) + '  ·  v9';
+      'Jefes derrotados: ' + t.bosses + '  ·  Enemigos destruidos: ' + t.kills + '  ·  Partidas: ' + t.plays + '  ·  Tiempo: ' + fmtTime(t.time) + '  ·  v10';
     document.getElementById('menuMute').textContent = save.muted ? 'SONIDO: NO' : 'SONIDO: SÍ';
     document.getElementById('btnMute').classList.toggle('off', save.muted);
   }
@@ -1421,11 +1432,12 @@
     { id: 'setSfx', out: 'outSfx', preview: () => { Sound.resume(); Sound.sfx.explode(); } },
     { id: 'setMusic', out: 'outMusic', preview: () => { Sound.resume(); Sound.sfx.musicPreview(); } },
     { id: 'setSens', out: 'outSens', preview: null },
+    { id: 'setTop', out: 'outTop', preview: null },
   ].map(c => {
     const el = document.getElementById(c.id);
     c.el = el;
     c.key = el.dataset.key;
-    c.min = +el.dataset.min; c.max = +el.dataset.max; c.step = +el.dataset.step;
+    c.min = +el.dataset.min; c.max = +el.dataset.max; c.step = +el.dataset.step; c.unit = el.dataset.unit || '%';
     c.bar = el.querySelector('.bar'); c.fill = el.querySelector('.fill');
     return c;
   });
@@ -1433,13 +1445,14 @@
     const v = save.settings[c.key];
     c.fill.style.width = ((v - c.min) / (c.max - c.min) * 100) + '%';
     c.bar.setAttribute('aria-valuenow', v);
-    document.getElementById(c.out).textContent = v + '%';
+    document.getElementById(c.out).textContent = v + (c.unit || '%');
   }
   function setCtl(c, v) {
     v = clamp(Math.round(v / c.step) * c.step, c.min, c.max);
     save.settings[c.key] = v;
     paintCtl(c);
     Sound.setVolumes(save.settings.sfx, save.settings.music);
+    if (c.key === 'top') { applyTop(); layout(mode !== 'playing' && mode !== 'paused'); }
   }
   function syncSettingsUI() {
     ctls.forEach(paintCtl);
@@ -1471,8 +1484,9 @@
   });
   document.getElementById('setMute').addEventListener('click', () => { Sound.resume(); toggleMute(); syncSettingsUI(); });
   document.getElementById('btnSettingsReset').addEventListener('click', () => {
-    save.settings = { sfx: 70, music: 70, sens: 100 };
+    save.settings = { sfx: 70, music: 70, sens: 100, top: topDefault() };
     Sound.setVolumes(70, 70);
+    applyTop(); layout(mode !== 'playing' && mode !== 'paused');
     persist(); syncSettingsUI();
   });
   document.getElementById('btnSettingsClose').addEventListener('click', () => {

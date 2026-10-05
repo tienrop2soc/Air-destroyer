@@ -47,7 +47,7 @@ Desde el menú, **COPIA DE SEGURIDAD** permite copiar o guardar el progreso como
 - **Enemigos aleatorios**: drones, exploradores, zigzag, ovnis, calamares alienígenas, cruceros y asteroides, en filas, hileras y formaciones en V.
 - **Jefes** con 3 fases de ataque y mucha más vida que un enemigo normal.
 - **Cada jefe destruido sube el rango**: el siguiente nivel empieza con mejores armas (más disparos, daño, cadencia, misiles teledirigidos) y con enemigos y jefes más duros (más vida, más apariciones, balas más rápidas). La nave está calibrada para ser **levemente superior** (~8 %), ver `js/balance.js`.
-- **Ajustes** (menú y pausa): volumen de efectos, volumen de música, sonido sí/no y sensibilidad del control (50–200 %). Se guardan con el progreso.
+- **Ajustes** (menú y pausa): volumen de efectos, volumen de música, sonido sí/no sensibilidad del control (50–200 %) y margen superior (baja todo el juego para que no lo tape la barra de estado o el efecto de cristal del iPad). Se guardan con el progreso.
 - **Mejoras**: P (arma), H (reparación), S (escudo), B (bomba).
 - **Progreso guardado** en `localStorage`: nave elegida, niveles desbloqueados, récord por nivel, rango de entrada de cada nivel y estadísticas totales.
 

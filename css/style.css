@@ -31,6 +31,7 @@ html, body {
 #stage {
   position: fixed;
   inset: 0;
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--top-extra, 0px));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,7 +83,7 @@ body.playing #hudbtns { display: flex; }
   align-items: flex-start;
   justify-content: center;
   overflow-y: auto;
-  padding: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+  padding: calc(16px + env(safe-area-inset-top, 0px) + var(--top-extra, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   background:
     radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%),
     radial-gradient(1px 1px at 70% 60%, #cfe3ff 50%, transparent 51%),

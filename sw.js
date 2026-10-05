@@ -1,6 +1,6 @@
 /* Service worker: la app funciona sin conexión.
  * Sube VERSION cuando cambies archivos para que los móviles descarguen la nueva versión. */
-const VERSION = 'air-destroyer-v9';
+const VERSION = 'air-destroyer-v10';
 const SHELL = [
   './', './index.html', './css/style.css', './manifest.webmanifest',
   './js/balance.js', './js/sprites.js', './js/audio.js', './js/game.js', './js/pwa.js',
