@@ -10,6 +10,12 @@
     });
   }
 
+  // Pide al sistema que no borre los datos del juego (progreso) si falta espacio.
+  if (navigator.storage && navigator.storage.persist) {
+    const ask = function () { navigator.storage.persist().catch(function () {}); };
+    window.addEventListener('pointerup', ask, { once: true });
+  }
+
   const btn = document.getElementById('btnInstall');
   const hint = document.getElementById('installHint');
   if (!btn) return;

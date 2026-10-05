@@ -28,6 +28,11 @@ Hay que servirla por HTTPS (por ejemplo con GitHub Pages, ver abajo) y abrirla e
 El workflow `.github/workflows/pages.yml` publica el juego en cada push.
 Al cambiar archivos, sube `VERSION` en `sw.js` para que las apps instaladas se actualicen.
 
+## Dónde se guarda el progreso
+
+Todo queda en tu dispositivo: la app instalada guarda los archivos del juego (modo sin conexión) y el progreso en el almacenamiento del navegador. No se envía a ningún servidor.
+Desde el menú, **COPIA DE SEGURIDAD** permite copiar o guardar el progreso como texto/archivo y restaurarlo (por ejemplo si borras los datos del navegador o cambias de dispositivo).
+
 ## Qué incluye
 
 - **5 naves** a elegir (solo estética): Halcón, Víbora, Fénix, Tempestad y Eclipse.

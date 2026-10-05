@@ -240,3 +240,20 @@ button { touch-action: manipulation; }
 @media (min-width: 700px) and (hover: none) {
   #hudbtns { left: auto; transform: none; opacity: 1; right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* Copia de seguridad */
+#backup { align-items: center; background: rgba(2, 3, 13, 0.9); animation: none; }
+#backup .panel { text-align: left; }
+#backup h1 { text-align: center; }
+.note { font-size: 8px; line-height: 1.8; color: var(--dim); margin: 0 0 10px; }
+#backupText {
+  width: 100%; font-family: ui-monospace, 'Courier New', monospace; font-size: 11px; color: var(--text);
+  background: #02030d; border: 2px solid var(--line); padding: 8px; resize: none; word-break: break-all;
+  -webkit-user-select: text; user-select: text;
+}
+#backupMsg.ok { color: #7dff6b; } #backupMsg.err { color: var(--red); }
+#backup .row { display: flex; gap: 10px; }
+#backup .row .big { margin-top: 10px; }
+#backup .big { font-size: 10px; padding: 12px; text-align: center; }
+.filebtn { cursor: pointer; }
+.filebtn input { display: none; }

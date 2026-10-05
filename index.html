@@ -62,9 +62,28 @@
         <span class="footBtns">
           <button id="btnInstall" class="link install hidden">INSTALAR APP</button>
           <button id="menuMute" class="link"></button>
+          <button id="btnBackup" class="link">COPIA DE SEGURIDAD</button>
           <button id="btnReset" class="link">BORRAR PROGRESO</button>
         </span>
       </div>
+    </div>
+  </div>
+
+  <!-- Copia de seguridad del progreso -->
+  <div id="backup" class="screen hidden">
+    <div class="panel small">
+      <h1 class="mid">COPIA DE SEGURIDAD</h1>
+      <p id="storageState" class="note"></p>
+      <p class="note">Tu progreso se guarda solo en este dispositivo. Guarda este texto para recuperarlo si borras los datos del navegador o cambias de dispositivo.</p>
+      <textarea id="backupText" rows="5" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <p id="backupMsg" class="note"></p>
+      <div class="row">
+        <button id="btnBackupCopy" class="big">COPIAR</button>
+        <button id="btnBackupSave" class="big alt">GUARDAR ARCHIVO</button>
+      </div>
+      <button id="btnBackupLoad" class="big alt">RESTAURAR DESDE EL TEXTO</button>
+      <label class="big alt filebtn">ABRIR ARCHIVO<input id="backupFile" type="file" accept=".txt,text/plain"></label>
+      <button id="btnBackupClose" class="big alt">VOLVER</button>
     </div>
   </div>
 

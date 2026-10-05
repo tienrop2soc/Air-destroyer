@@ -101,26 +101,47 @@
     };
   }
 
-  function loadSave() {
+  // Valida un objeto de progreso (de localStorage o de una copia de seguridad).
+  function sanitizeSave(s) {
     const d = defaultSave();
+    if (!s || typeof s !== 'object' || s.v !== 1) return null;
+    d.ship = Math.min(S.ships.length - 1, Math.max(0, s.ship | 0));
+    d.level = Math.min(LEVELS.length - 1, Math.max(0, s.level | 0));
+    d.muted = !!s.muted;
+    d.unlocked = Math.min(LEVELS.length, Math.max(1, s.unlocked | 0));
+    if (Array.isArray(s.levels)) {
+      d.levels.forEach((l, i) => {
+        Object.assign(l, pick(s.levels[i], ['best', 'tier', 'bosses', 'plays']));
+        l.tier = Math.max(l.tier, LEVELS[i].baseTier);
+      });
+    }
+    Object.assign(d.totals, pick(s.totals, ['bosses', 'kills', 'plays', 'time']));
+    return d;
+  }
+
+  function loadSave() {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return d;
-      const s = JSON.parse(raw);
-      if (!s || s.v !== 1) return d;
-      d.ship = Math.min(S.ships.length - 1, Math.max(0, s.ship | 0));
-      d.level = Math.min(LEVELS.length - 1, Math.max(0, s.level | 0));
-      d.muted = !!s.muted;
-      d.unlocked = Math.min(LEVELS.length, Math.max(1, s.unlocked | 0));
-      if (Array.isArray(s.levels)) {
-        d.levels.forEach((l, i) => {
-          Object.assign(l, pick(s.levels[i], ['best', 'tier', 'bosses', 'plays']));
-          l.tier = Math.max(l.tier, LEVELS[i].baseTier);
-        });
-      }
-      Object.assign(d.totals, pick(s.totals, ['bosses', 'kills', 'plays', 'time']));
-      return d;
-    } catch (e) { return d; }
+      return (raw && sanitizeSave(JSON.parse(raw))) || defaultSave();
+    } catch (e) { return defaultSave(); }
+  }
+
+  // Copia de seguridad: texto "AIRD1:..." que se puede copiar, guardar en un archivo y restaurar.
+  const BACKUP_PREFIX = 'AIRD1:';
+  function exportSave() {
+    return BACKUP_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(save))));
+  }
+  function importSave(text) {
+    try {
+      const t = String(text).trim();
+      if (!t.startsWith(BACKUP_PREFIX)) return false;
+      const d = sanitizeSave(JSON.parse(decodeURIComponent(escape(atob(t.slice(BACKUP_PREFIX.length))))));
+      if (!d) return false;
+      save = d;
+      persist();
+      Sound.setMuted(save.muted);
+      return true;
+    } catch (e) { return false; }
   }
   function pick(o, keys) {
     const r = {};
@@ -1235,7 +1256,7 @@
   /* ================================================================== */
   /* Interfaz: menú, pausa, fin de partida                              */
   /* ================================================================== */
-  const screens = { menu: document.getElementById('menu'), pause: document.getElementById('pause'), over: document.getElementById('over') };
+  const screens = { menu: document.getElementById('menu'), pause: document.getElementById('pause'), over: document.getElementById('over'), backup: document.getElementById('backup') };
   function showScreen(name) {
     Object.keys(screens).forEach(k => screens[k].classList.toggle('hidden', k !== name));
     if (name) screens[name].scrollTop = 0;
@@ -1347,6 +1368,58 @@
   document.getElementById('btnMute').addEventListener('click', () => { Sound.resume(); toggleMute(); });
   ['btnBomb', 'btnPause', 'btnMute'].forEach(id => {
     document.getElementById(id).addEventListener('pointerdown', (e) => e.stopPropagation());
+  });
+
+  /* --- Copia de seguridad --- */
+  const backupText = document.getElementById('backupText');
+  const backupMsg = document.getElementById('backupMsg');
+  function backupSay(msg, ok) { backupMsg.textContent = msg; backupMsg.className = 'note ' + (ok ? 'ok' : 'err'); }
+
+  function openBackup() {
+    backupText.value = exportSave();
+    backupSay('', true);
+    const st = document.getElementById('storageState');
+    st.textContent = 'Guardado en este dispositivo (localStorage).';
+    if (navigator.storage && navigator.storage.persisted) {
+      navigator.storage.persisted().then(p => {
+        st.textContent = 'Guardado en este dispositivo' + (p ? ' · almacenamiento protegido.' : ' · el sistema podría borrarlo si falta espacio: haz una copia.');
+      }).catch(() => {});
+    }
+    showScreen('backup');
+  }
+  document.getElementById('btnBackup').addEventListener('click', openBackup);
+  document.getElementById('btnBackupClose').addEventListener('click', () => { buildMenu(); showScreen('menu'); });
+  document.getElementById('btnBackupCopy').addEventListener('click', () => {
+    backupText.value = exportSave();
+    const done = () => backupSay('Copiado. Pégalo en un lugar seguro (Notas, mensaje a ti mismo...).', true);
+    const fallback = () => { backupText.select(); backupSay('Selecciona el texto y cópialo manualmente.', false); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(backupText.value).then(done, fallback);
+    else fallback();
+  });
+  document.getElementById('btnBackupLoad').addEventListener('click', () => {
+    if (importSave(backupText.value)) { backupSay('Progreso restaurado.', true); }
+    else backupSay('El texto no es una copia válida de Air Destroyer.', false);
+  });
+  document.getElementById('btnBackupSave').addEventListener('click', () => {
+    const blob = new Blob([exportSave()], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'air-destroyer-progreso.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    backupSay('Archivo generado.', true);
+  });
+  document.getElementById('backupFile').addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      backupText.value = String(reader.result);
+      const ok = importSave(backupText.value);
+      backupSay(ok ? 'Progreso restaurado desde el archivo.' : 'El archivo no es una copia válida.', ok);
+    };
+    reader.readAsText(f);
+    e.target.value = '';
   });
 
   // Gancho para pruebas automáticas
