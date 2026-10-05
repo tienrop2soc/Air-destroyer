@@ -207,6 +207,7 @@
   /* Estado de la partida                                               */
   /* ================================================================== */
   let mode = 'menu';           // menu | playing | paused | over
+  let lastResult = null;       // resumen del último nivel completado (se muestra en el menú)
   let G = null;
   let time = 0;                // reloj global de animación
 
@@ -299,6 +300,7 @@
     setupBackground(levelIdx);
     pointer.dx = pointer.dy = 0;
     bombPressed = false;
+    lastResult = null;
     showScreen(null);
     mode = 'playing';
     document.body.classList.add('playing');
@@ -338,13 +340,10 @@
       '<div><span>PUNTOS</span><b>' + pad(G.score, 6) + '</b></div>' +
       '<div><span>RÉCORD</span><b>' + pad(lv.best, 6) + '</b></div>' +
       '<div><span>BAJAS</span><b>' + G.kills + '</b></div>' +
-      '<div><span>JEFES</span><b>' + G.bossesThisRun + '</b></div>' +
+      '<div><span>NIVEL</span><b>' + (G.levelIdx + 1) + '</b></div>' +
       '<div><span>RANGO</span><b>' + (G.tier + 1) + '</b></div>' +
       '<div><span>TIEMPO</span><b>' + fmtTime(G.runTime) + '</b></div>';
     document.getElementById('overNew').classList.toggle('hidden', !newBest || G.score <= 0);
-    const cp = lv.tier;
-    const btn = document.getElementById('btnRetry');
-    btn.textContent = cp > G.level.baseTier ? 'REINTENTAR (RANGO ' + (cp + 1) + ')' : 'REINTENTAR';
     showScreen('over');
   }
 
@@ -747,6 +746,7 @@
     if (c.left <= 0) { b.cur = null; b.rest = 0.9 / Math.sqrt(G.escale.fire); }
   }
 
+  // Derrotar al jefe completa el nivel: la partida termina y se vuelve al menú.
   function bossDefeated() {
     const b = G.boss;
     const lv = save.levels[G.levelIdx];
@@ -757,37 +757,48 @@
     G.kills++;
     G.boss = null;
     G.bossesThisRun++;
-    G.tier++;
-    G.bossClock = 0;
     G.warn = 0;
-    G.stats = B.playerStats(G.tier, G.power);
-    G.escale = B.enemyScale(G.tier, G.level.diff);
-    // recompensas
-    const p = G.player;
-    p.maxHp = G.stats.maxHp;
-    p.hp = p.maxHp;
-    p.bombs = Math.min(5, p.bombs + 1);
-    p.invuln = 2.5;
-    dropPowerup(b.x - 20, b.y, 'P'); dropPowerup(b.x + 20, b.y, 'S'); dropPowerup(b.x, b.y - 10, 'B');
+    G.ebullets.length = 0;
     G.enemies.forEach(e => { if (!e.dying) { e.hp = 0; killEnemy(e); } });
-    // progreso guardado
+    G.player.invuln = 999;
+
+    // El jefe sube el rango: el siguiente nivel empieza con arma y enemigos mejorados.
+    const newTier = G.tier + 1;
+    const weapon = B.playerStats(newTier, G.power).level;
+    const next = G.levelIdx + 1;
+    const last = next >= LEVELS.length;
     lv.bosses++;
-    lv.tier = Math.max(lv.tier, G.tier);
     lv.best = Math.max(lv.best, Math.floor(G.score));
     save.totals.bosses++;
     const lines = [
       { text: 'JEFE DESTRUIDO', color: '#7dff6b', scale: 1 },
-      { text: 'ARMA NIVEL ' + G.stats.level + '  ^', color: '#ff9a2f', scale: 1 },
-      { text: 'RANGO ' + (G.tier + 1) + ' - ENEMIGOS MAS FUERTES', color: '#ff4d6d', scale: 1 },
+      { text: 'NIVEL COMPLETADO', color: '#ffffff', scale: 1 },
+      { text: 'ARMA NIVEL ' + weapon + '  ^', color: '#ff9a2f', scale: 1 },
+      { text: 'ENEMIGOS MAS FUERTES', color: '#ff4d6d', scale: 1 },
     ];
-    if (G.levelIdx + 1 < LEVELS.length && save.unlocked < G.levelIdx + 2) {
-      save.unlocked = G.levelIdx + 2;
-      lines.push({ text: 'NIVEL ' + (G.levelIdx + 2) + ' DESBLOQUEADO', color: '#4fd8ff', scale: 1 });
+    if (!last) {
+      save.levels[next].tier = Math.max(save.levels[next].tier, newTier);
+      if (save.unlocked < next + 1) save.unlocked = next + 1;
+      save.level = next;
+      lines.push({ text: 'NIVEL ' + (next + 1) + ' DESBLOQUEADO', color: '#4fd8ff', scale: 1 });
+    } else {
+      lines.push({ text: 'JUEGO COMPLETADO!', color: '#ffd23f', scale: 1 });
     }
     persist();
-    setBanner(lines, 4.5);
+    G.won = { t: 0, dur: 5, newTier, weapon, last, next };
+    setBanner(lines, 5);
     Sound.sfx.levelUp();
-    Sound.music('level', G.levelIdx);
+  }
+
+  function finishWin() {
+    const w = G.won;
+    const newBest = commitRun();
+    lastResult = {
+      levelIdx: G.levelIdx, score: Math.floor(G.score), best: save.levels[G.levelIdx].best,
+      kills: G.kills, time: G.runTime, newBest: newBest && G.score > 0,
+      rank: w.newTier + 1, weapon: w.weapon, last: w.last, next: w.next,
+    };
+    toMenu();
   }
 
   /* ================================================================== */
@@ -892,7 +903,7 @@
     bombPressed = false;
 
     /* --- reloj del jefe --- */
-    if (!G.boss && G.warn <= 0 && !p.dead) {
+    if (!G.boss && G.warn <= 0 && !p.dead && !G.won) {
       G.bossClock += dt;
       if (G.bossClock >= BOSS_INTERVAL) {
         G.warn = 3.2;
@@ -904,7 +915,11 @@
       if (G.warn <= 0) { G.warn = 0; spawnBoss(); }
     }
 
-    if (!p.dead) updateSpawner(dt);
+    if (!p.dead && !G.won) updateSpawner(dt);
+    if (G.won) {
+      G.won.t += dt;
+      if (G.won.t >= G.won.dur) { finishWin(); return; }
+    }
 
     /* --- balas del jugador --- */
     G.bullets.forEach(b => {
@@ -1131,9 +1146,11 @@
       ctx.fillStyle = '#3a0010'; ctx.fillRect(4, 19, W - 8, 4);
       ctx.fillStyle = '#ff2d55'; ctx.fillRect(4, 19, Math.round((W - 8) * b.hp / b.maxhp), 4);
       ctx.fillStyle = '#ffd0da'; ctx.fillRect(4, 19, Math.round((W - 8) * b.hp / b.maxhp), 1);
+    } else if (G.won) {
+      text(ctx, 'NIVEL COMPLETADO', W / 2, 11, '#7dff6b', 1, 'center');
     } else {
       const left = Math.max(0, BOSS_INTERVAL - G.bossClock);
-      text(ctx, 'JEFE ' + fmtTime(left), W / 2, 11, G.warn > 0 ? '#ff4d4d' : '#9fb4e8', 1, 'center');
+      text(ctx, 'JEFE EN ' + fmtTime(left), W / 2, 11, G.warn > 0 ? '#ff4d4d' : '#9fb4e8', 1, 'center');
       ctx.fillStyle = '#10204a'; ctx.fillRect(4, 20, W - 8, 2);
       ctx.fillStyle = left < 30 ? '#ff9a2f' : '#4fd8ff';
       ctx.fillRect(4, 20, Math.round((W - 8) * G.bossClock / BOSS_INTERVAL), 2);
@@ -1215,6 +1232,7 @@
   const screens = { menu: document.getElementById('menu'), pause: document.getElementById('pause'), over: document.getElementById('over') };
   function showScreen(name) {
     Object.keys(screens).forEach(k => screens[k].classList.toggle('hidden', k !== name));
+    if (name) screens[name].scrollTop = 0;
   }
 
   function spriteCanvas(spr, scale, frame) {
@@ -1225,8 +1243,6 @@
     c.getContext('2d').drawImage(spr.frames[frame || 0], 0, 0);
     return c;
   }
-
-  let menuStartTier = 'continue';   // continue | new
 
   function buildMenu() {
     // --- naves ---
@@ -1263,27 +1279,28 @@
       thumb.appendChild(spriteCanvas(S.bosses[i], 1));
       const info = document.createElement('div');
       info.className = 'info';
-      info.innerHTML = '<b>' + (i + 1) + '. ' + lv.name + '</b><span>' +
+      const entry = Math.max(rec.tier, lv.baseTier) + 1;
+      info.innerHTML = '<b>' + (i + 1) + '. ' + lv.name + (rec.bosses > 0 ? ' <i>✔ COMPLETADO</i>' : '') + '</b><span>' +
         (locked ? 'BLOQUEADO — derrota al jefe del nivel ' + i : lv.sub + ' · Jefe: ' + lv.boss) + '</span>' +
-        (locked ? '' : '<em>RÉCORD ' + pad(rec.best, 6) + ' · JEFES ' + rec.bosses + (rec.tier > lv.baseTier ? ' · RANGO ' + (rec.tier + 1) : '') + '</em>');
+        (locked ? '' : '<em>RÉCORD ' + pad(rec.best, 6) + ' · ENTRADA: RANGO ' + entry + '</em>');
       b.appendChild(thumb); b.appendChild(info);
       b.addEventListener('click', () => { save.level = i; persist(); Sound.resume(); Sound.sfx.select(); buildMenu(); });
       lvEl.appendChild(b);
     });
 
-    // --- modo de inicio ---
-    const rec = save.levels[save.level];
-    const startEl = document.getElementById('startMode');
-    startEl.innerHTML = '';
-    const base = LEVELS[save.level].baseTier;
-    if (rec.tier > base) {
-      [['continue', 'CONTINUAR · RANGO ' + (rec.tier + 1)], ['new', 'DESDE CERO · RANGO ' + (base + 1)]].forEach(([id, label]) => {
-        const b = document.createElement('button');
-        b.className = 'chip' + (menuStartTier === id ? ' sel' : '');
-        b.textContent = label;
-        b.addEventListener('click', () => { menuStartTier = id; Sound.sfx.select(); buildMenu(); });
-        startEl.appendChild(b);
-      });
+    // --- resultado del último nivel completado ---
+    const res = document.getElementById('result');
+    res.classList.toggle('hidden', !lastResult);
+    if (lastResult) {
+      const r = lastResult;
+      res.innerHTML =
+        '<b>¡NIVEL COMPLETADO!</b><span>' + LEVELS[r.levelIdx].name + ' · Jefe: ' + LEVELS[r.levelIdx].boss + '</span>' +
+        '<div class="rgrid"><div><span>PUNTOS</span><b>' + pad(r.score, 6) + '</b></div>' +
+        '<div><span>BAJAS</span><b>' + r.kills + '</b></div>' +
+        '<div><span>TIEMPO</span><b>' + fmtTime(r.time) + '</b></div></div>' +
+        (r.newBest ? '<em class="newrec">¡NUEVO RÉCORD!</em>' : '') +
+        '<p>Tu arma sube al <b>nivel ' + r.weapon + '</b> y los enemigos serán más duros (rango ' + r.rank + ').</p>' +
+        '<p class="go">' + (r.last ? '¡Has completado todos los niveles! Puedes repetirlos para mejorar tu récord.' : 'Elige el siguiente nivel y pulsa JUGAR.') + '</p>';
     }
     const t = save.totals;
     document.getElementById('totals').textContent =
@@ -1293,9 +1310,7 @@
   }
 
   function startFromMenu() {
-    const rec = save.levels[save.level];
-    const tier = menuStartTier === 'continue' ? rec.tier : 0;
-    startRun(save.level, tier);
+    startRun(save.level, save.levels[save.level].tier);
   }
 
   document.getElementById('btnPlay').addEventListener('click', startFromMenu);
@@ -1313,14 +1328,12 @@
     btnReset.textContent = 'BORRAR PROGRESO';
     save = defaultSave();
     persist();
-    menuStartTier = 'continue';
     buildMenu();
   });
   document.getElementById('btnResume').addEventListener('click', resume);
   document.getElementById('btnQuit').addEventListener('click', toMenu);
   document.getElementById('btnRetry').addEventListener('click', () => {
-    const rec = save.levels[G.levelIdx];
-    startRun(G.levelIdx, menuStartTier === 'new' ? 0 : rec.tier);
+    startRun(G.levelIdx, save.levels[G.levelIdx].tier);
   });
   document.getElementById('btnMenu').addEventListener('click', toMenu);
   document.getElementById('btnPause').addEventListener('click', () => { if (mode === 'playing') pause(); else if (mode === 'paused') resume(); });

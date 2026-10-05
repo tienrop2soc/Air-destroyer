@@ -208,3 +208,21 @@ button { font-family: var(--font); }
 
 .link.install { color: var(--gold); }
 .link.install:hover { color: var(--cyan); }
+
+/* Resultado del nivel completado */
+#result {
+  margin: 4px 0 6px; padding: 14px; text-align: center;
+  background: #0b2a14; border: 3px solid #3fbf5a; box-shadow: 0 0 18px rgba(80, 255, 120, 0.3);
+  display: flex; flex-direction: column; gap: 10px;
+}
+#result > b { font-size: 14px; color: #7dff6b; font-weight: normal; }
+#result > span { font-size: 8px; color: var(--dim); line-height: 1.6; }
+#result .rgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#result .rgrid div { background: #07170d; border: 2px solid #1d6b30; padding: 8px 4px; display: flex; flex-direction: column; gap: 6px; }
+#result .rgrid span { font-size: 7px; color: var(--dim); }
+#result .rgrid b { font-size: 11px; color: var(--gold); font-weight: normal; }
+#result p { margin: 0; font-size: 8px; line-height: 1.8; color: var(--text); }
+#result p b { color: #ff9a2f; font-weight: normal; }
+#result p.go { color: var(--cyan); }
+#result .newrec { font-style: normal; font-size: 9px; color: var(--cyan); animation: blink 0.8s steps(2) infinite; }
+.level .info b i { font-style: normal; color: #7dff6b; font-size: 7px; margin-left: 6px; white-space: nowrap; }

@@ -32,11 +32,12 @@ Al cambiar archivos, sube `VERSION` en `sw.js` para que las apps instaladas se a
 
 - **5 naves** a elegir (solo estética): Halcón, Víbora, Fénix, Tempestad y Eclipse.
 - **5 niveles** con fondo, enemigos y jefe propios. Se desbloquean al derrotar al jefe del nivel anterior.
+- **Cada nivel dura 5 minutos exactos y termina con su jefe** (aviso con alarma, a hora fija, no aleatorio). Al derrotarlo se completa el nivel, la partida termina y vuelves al menú principal con el resultado y el siguiente nivel ya seleccionado.
 - **Enemigos aleatorios**: drones, exploradores, zigzag, ovnis, calamares alienígenas, cruceros y asteroides, en filas, hileras y formaciones en V.
-- **Un jefe cada 5 minutos** (avisa con una alarma) con 3 fases de ataque. Tiene mucha más vida que un enemigo normal.
-- **Cada jefe destruido sube el rango**: mejora el arma (más disparos, daño, cadencia, misiles teledirigidos) y también la dificultad (más vida, más enemigos, balas más rápidas). La nave está calibrada para ser **levemente superior** (~8 %), ver `js/balance.js`.
+- **Jefes** con 3 fases de ataque y mucha más vida que un enemigo normal.
+- **Cada jefe destruido sube el rango**: el siguiente nivel empieza con mejores armas (más disparos, daño, cadencia, misiles teledirigidos) y con enemigos y jefes más duros (más vida, más apariciones, balas más rápidas). La nave está calibrada para ser **levemente superior** (~8 %), ver `js/balance.js`.
 - **Mejoras**: P (arma), H (reparación), S (escudo), B (bomba).
-- **Progreso guardado** en `localStorage`: nave elegida, niveles desbloqueados, récord por nivel, rango alcanzado (puedes *continuar* desde él o empezar de cero) y estadísticas totales.
+- **Progreso guardado** en `localStorage`: nave elegida, niveles desbloqueados, récord por nivel, rango de entrada de cada nivel y estadísticas totales.
 
 ## Estructura
 
