@@ -257,3 +257,18 @@ button { touch-action: manipulation; }
 #backup .big { font-size: 10px; padding: 12px; text-align: center; }
 .filebtn { cursor: pointer; }
 .filebtn input { display: none; }
+
+/* Ajustes */
+#settings { align-items: center; background: rgba(2, 3, 13, 0.92); animation: none; }
+#settings .panel { text-align: left; }
+#settings h1 { text-align: center; }
+#settings h2 { margin-top: 12px; }
+.big.slim { font-size: 10px; padding: 12px; margin-top: 12px; }
+.setting { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; margin: 16px 0 8px; color: var(--text); }
+.setting output { color: var(--gold); }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; background: transparent; touch-action: pan-y; cursor: pointer; margin: 0; }
+input[type=range]::-webkit-slider-runnable-track { height: 10px; background: #070b2a; border: 2px solid var(--line); }
+input[type=range]::-moz-range-track { height: 10px; background: #070b2a; border: 2px solid var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 30px; margin-top: -12px; background: var(--gold); border: 3px solid #fff2b0; box-shadow: 0 3px 0 #a06a00; }
+input[type=range]::-moz-range-thumb { width: 16px; height: 24px; background: var(--gold); border: 3px solid #fff2b0; border-radius: 0; }
+input[type=range]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }

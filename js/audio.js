@@ -5,7 +5,9 @@
 (function (root) {
   'use strict';
 
-  let ac = null, master = null, noiseBuf = null;
+  let ac = null, master = null, noiseBuf = null, sfxBus = null, musicBus = null;
+  let sfxVol = 70, musicVol = 70;          // 0-100; 70 equivale al volumen de diseño
+  const toGain = (v) => Math.pow(Math.max(0, v) / 70, 2);
   let muted = false;
   let musicTimer = null, musicMode = null, musicStep = 0, musicNext = 0, musicRoot = 110;
 
@@ -18,6 +20,8 @@
       master = ac.createGain();
       master.gain.value = muted ? 0 : 0.5;
       master.connect(ac.destination);
+      sfxBus = ac.createGain(); sfxBus.gain.value = toGain(sfxVol); sfxBus.connect(master);
+      musicBus = ac.createGain(); musicBus.gain.value = toGain(musicVol); musicBus.connect(master);
       noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
       const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -41,7 +45,7 @@
     root.addEventListener(ev, resume, { passive: true });
   });
 
-  function tone(type, f0, f1, dur, vol, delay) {
+  function tone(type, f0, f1, dur, vol, delay, bus) {
     if (!ac) return;
     const t = ac.currentTime + (delay || 0);
     const o = ac.createOscillator(), g = ac.createGain();
@@ -50,11 +54,11 @@
     if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(master);
+    o.connect(g); g.connect(bus || sfxBus);
     o.start(t); o.stop(t + dur + 0.03);
   }
 
-  function noise(dur, vol, fStart, fEnd, delay) {
+  function noise(dur, vol, fStart, fEnd, delay, bus) {
     if (!ac) return;
     const t = ac.currentTime + (delay || 0);
     const s = ac.createBufferSource();
@@ -66,7 +70,7 @@
     const g = ac.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f); f.connect(g); g.connect(master);
+    s.connect(f); f.connect(g); g.connect(bus || sfxBus);
     s.start(t); s.stop(t + dur + 0.03);
   }
 
@@ -87,6 +91,8 @@
     warning() { for (let i = 0; i < 4; i++) { tone('square', 440, 440, 0.18, 0.07, i * 0.5); tone('square', 330, 330, 0.18, 0.07, i * 0.5 + 0.25); } },
     levelUp() { [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone('square', f, f, 0.14, 0.07, i * 0.09)); },
     select() { tone('square', 520, 780, 0.07, 0.05); },
+    // Muestra de música para el ajuste de volumen
+    musicPreview() { [0, 3, 7, 12, 7, 3].forEach((n, i) => { const f = 220 * Math.pow(2, n / 12); tone('triangle', f, f, 0.14, 0.06, i * 0.12, musicBus); tone('square', f * 2, f * 2, 0.1, 0.02, i * 0.12, musicBus); }); },
     gameOver() { [330, 262, 196, 131].forEach((f, i) => tone('triangle', f, f * 0.95, 0.3, 0.12, i * 0.28)); },
   };
 
@@ -104,12 +110,12 @@
       const delay = Math.max(0, musicNext - ac.currentTime);
       const i = musicStep % 16;
       const bf = musicRoot * Math.pow(2, m.bass[i] / 12);
-      tone('triangle', bf, bf, m.step * 0.9, m.bassVol, delay);
+      tone('triangle', bf, bf, m.step * 0.9, m.bassVol, delay, musicBus);
       if (i % 2 === 0 || musicMode === 'boss') {
         const lf = musicRoot * 2 * Math.pow(2, m.lead[i] / 12);
-        tone('square', lf, lf, m.step * 0.7, m.leadVol, delay);
+        tone('square', lf, lf, m.step * 0.7, m.leadVol, delay, musicBus);
       }
-      if (i % 4 === 0) noise(0.05, musicMode === 'boss' ? 0.05 : 0.03, 6000, 3000, delay);
+      if (i % 4 === 0) noise(0.05, musicMode === 'boss' ? 0.05 : 0.03, 6000, 3000, delay, musicBus);
       musicStep++;
       musicNext += m.step;
     }
@@ -130,10 +136,16 @@
     if (!musicTimer) musicTimer = setInterval(musicTick, 30);
   }
 
+  function setVolumes(sfx, music) {
+    sfxVol = sfx; musicVol = music;
+    if (sfxBus) sfxBus.gain.value = toGain(sfx);
+    if (musicBus) musicBus.gain.value = toGain(music);
+  }
+
   function setMuted(v) {
     muted = !!v;
     if (master) master.gain.value = muted ? 0 : 0.5;
   }
 
-  root.Sound = { resume, sfx, music, setMuted, isMuted: () => muted };
+  root.Sound = { resume, sfx, music, setMuted, setVolumes, isMuted: () => muted };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

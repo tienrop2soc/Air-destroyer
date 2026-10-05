@@ -98,6 +98,7 @@
   function defaultSave() {
     return {
       v: 1, ship: 0, level: 0, muted: false, unlocked: 1,
+      settings: { sfx: 70, music: 70, sens: 100 },
       levels: LEVELS.map((l) => ({ best: 0, tier: l.baseTier, bosses: 0, plays: 0 })),
       totals: { bosses: 0, kills: 0, plays: 0, time: 0 },
     };
@@ -110,6 +111,12 @@
     d.ship = Math.min(S.ships.length - 1, Math.max(0, s.ship | 0));
     d.level = Math.min(LEVELS.length - 1, Math.max(0, s.level | 0));
     d.muted = !!s.muted;
+    if (s.settings && typeof s.settings === 'object') {
+      const st = s.settings, num = (v, a, b, def) => (typeof v === 'number' && isFinite(v) ? clamp(Math.round(v), a, b) : def);
+      d.settings.sfx = num(st.sfx, 0, 100, 70);
+      d.settings.music = num(st.music, 0, 100, 70);
+      d.settings.sens = num(st.sens, 50, 200, 100);
+    }
     d.unlocked = Math.min(LEVELS.length, Math.max(1, s.unlocked | 0));
     if (Array.isArray(s.levels)) {
       d.levels.forEach((l, i) => {
@@ -142,6 +149,7 @@
       save = d;
       persist();
       Sound.setMuted(save.muted);
+      Sound.setVolumes(save.settings.sfx, save.settings.music);
       return true;
     } catch (e) { return false; }
   }
@@ -155,13 +163,14 @@
   }
   let save = loadSave();
   Sound.setMuted(save.muted);
+  Sound.setVolumes(save.settings.sfx, save.settings.music);
 
   /* ================================================================== */
   /* Utilidades                                                         */
   /* ================================================================== */
   const rand = (a, b) => a + Math.random() * (b - a);
   const randi = (a, b) => Math.floor(rand(a, b + 1));
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
   const pad = (n, len) => String(Math.floor(n)).padStart(len, '0');
   function weightedPick(obj) {
@@ -218,8 +227,9 @@
   });
   document.addEventListener('pointermove', (e) => {
     if (e.pointerId !== activePointer) return;
-    pointer.dx += (e.clientX - pointer.lastX) / viewScale;
-    pointer.dy += (e.clientY - pointer.lastY) / viewScale;
+    const k = save.settings.sens / 100;
+    pointer.dx += (e.clientX - pointer.lastX) / viewScale * k;
+    pointer.dy += (e.clientY - pointer.lastY) / viewScale * k;
     pointer.lastX = e.clientX; pointer.lastY = e.clientY;
   });
   const endPointer = (e) => {
@@ -949,7 +959,7 @@
       if (keys['arrowright'] || keys['d']) dx += 1;
       if (keys['arrowup'] || keys['w']) dy -= 1;
       if (keys['arrowdown'] || keys['s']) dy += 1;
-      const sp = 120 * Math.min(1.5, 0.6 + W / 600);
+      const sp = 120 * Math.min(1.5, 0.6 + W / 600) * (save.settings.sens / 100);
       const len = Math.hypot(dx, dy) || 1;
       p.x += dx / len * sp * dt + pointer.dx;
       p.y += dy / len * sp * dt + pointer.dy;
@@ -1290,7 +1300,7 @@
   /* ================================================================== */
   /* Interfaz: menú, pausa, fin de partida                              */
   /* ================================================================== */
-  const screens = { menu: document.getElementById('menu'), pause: document.getElementById('pause'), over: document.getElementById('over'), backup: document.getElementById('backup') };
+  const screens = { menu: document.getElementById('menu'), pause: document.getElementById('pause'), over: document.getElementById('over'), backup: document.getElementById('backup'), settings: document.getElementById('settings') };
   function showScreen(name) {
     Object.keys(screens).forEach(k => screens[k].classList.toggle('hidden', k !== name));
     if (name) screens[name].scrollTop = 0;
@@ -1403,6 +1413,49 @@
   ['btnBomb', 'btnPause', 'btnMute'].forEach(id => {
     document.getElementById(id).addEventListener('pointerdown', (e) => e.stopPropagation());
   });
+
+  /* --- Ajustes --- */
+  let settingsFrom = 'menu';
+  const sliders = [
+    { id: 'setSfx', key: 'sfx', out: 'outSfx', fmt: v => v + '%', preview: () => { Sound.resume(); Sound.sfx.explode(); } },
+    { id: 'setMusic', key: 'music', out: 'outMusic', fmt: v => v + '%', preview: () => { Sound.resume(); Sound.sfx.musicPreview(); } },
+    { id: 'setSens', key: 'sens', out: 'outSens', fmt: v => v + '%', preview: null },
+  ];
+  function syncSettingsUI() {
+    sliders.forEach(sl => {
+      const el = document.getElementById(sl.id);
+      el.value = save.settings[sl.key];
+      document.getElementById(sl.out).textContent = sl.fmt(save.settings[sl.key]);
+    });
+    document.getElementById('setMute').textContent = save.muted ? 'SONIDO: NO' : 'SONIDO: SÍ';
+  }
+  function openSettings(from) {
+    settingsFrom = from;
+    syncSettingsUI();
+    showScreen('settings');
+  }
+  sliders.forEach(sl => {
+    const el = document.getElementById(sl.id);
+    el.addEventListener('input', () => {
+      save.settings[sl.key] = parseInt(el.value, 10);
+      document.getElementById(sl.out).textContent = sl.fmt(save.settings[sl.key]);
+      Sound.setVolumes(save.settings.sfx, save.settings.music);
+    });
+    el.addEventListener('change', () => { persist(); if (sl.preview) sl.preview(); });
+  });
+  document.getElementById('setMute').addEventListener('click', () => { Sound.resume(); toggleMute(); syncSettingsUI(); });
+  document.getElementById('btnSettingsReset').addEventListener('click', () => {
+    save.settings = { sfx: 70, music: 70, sens: 100 };
+    Sound.setVolumes(70, 70);
+    persist(); syncSettingsUI();
+  });
+  document.getElementById('btnSettingsClose').addEventListener('click', () => {
+    persist();
+    if (settingsFrom === 'menu') buildMenu();
+    showScreen(settingsFrom);
+  });
+  document.getElementById('btnSettings').addEventListener('click', () => openSettings('menu'));
+  document.getElementById('btnPauseSettings').addEventListener('click', () => openSettings('pause'));
 
   /* --- Copia de seguridad --- */
   const backupText = document.getElementById('backupText');

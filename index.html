@@ -50,6 +50,7 @@
       <div id="levels"></div>
 
       <button id="btnPlay" class="big">▶ JUGAR</button>
+      <button id="btnSettings" class="big alt slim">⚙ AJUSTES</button>
 
       <div class="help">
         <b>Controles</b> · Mover: flechas / WASD o arrastra el dedo · Disparo automático ·
@@ -66,6 +67,28 @@
           <button id="btnReset" class="link">BORRAR PROGRESO</button>
         </span>
       </div>
+    </div>
+  </div>
+
+  <!-- Ajustes -->
+  <div id="settings" class="screen hidden">
+    <div class="panel small">
+      <h1 class="mid">AJUSTES</h1>
+
+      <h2>Sonido</h2>
+      <button id="setMute" class="big alt slim"></button>
+      <label class="setting" for="setSfx"><span>Efectos</span><output id="outSfx"></output></label>
+      <input id="setSfx" type="range" min="0" max="100" step="5">
+      <label class="setting" for="setMusic"><span>Música</span><output id="outMusic"></output></label>
+      <input id="setMusic" type="range" min="0" max="100" step="5">
+
+      <h2>Control</h2>
+      <label class="setting" for="setSens"><span>Sensibilidad</span><output id="outSens"></output></label>
+      <input id="setSens" type="range" min="50" max="200" step="5">
+      <p class="note">Cuánto se mueve la nave al arrastrar el dedo (o con las teclas). Más alta = la nave recorre más pantalla con menos movimiento. 100 % es el valor normal.</p>
+
+      <button id="btnSettingsReset" class="big alt slim">RESTABLECER</button>
+      <button id="btnSettingsClose" class="big">VOLVER</button>
     </div>
   </div>
 
@@ -92,6 +115,7 @@
     <div class="panel small">
       <h1 class="mid">PAUSA</h1>
       <button id="btnResume" class="big">▶ CONTINUAR</button>
+      <button id="btnPauseSettings" class="big alt">⚙ AJUSTES</button>
       <button id="btnQuit" class="big alt">MENÚ PRINCIPAL</button>
     </div>
   </div>
