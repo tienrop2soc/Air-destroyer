@@ -1300,13 +1300,21 @@
 
   document.getElementById('btnPlay').addEventListener('click', startFromMenu);
   document.getElementById('menuMute').addEventListener('click', () => { Sound.resume(); toggleMute(); });
-  document.getElementById('btnReset').addEventListener('click', () => {
-    if (confirm('¿Borrar todo tu progreso guardado?')) {
-      save = defaultSave();
-      persist();
-      menuStartTier = 'continue';
-      buildMenu();
+  // Confirmación en dos pasos (confirm() no funciona en todos los entornos)
+  const btnReset = document.getElementById('btnReset');
+  let resetTimer = null;
+  btnReset.addEventListener('click', () => {
+    if (!resetTimer) {
+      btnReset.textContent = '¿SEGURO? PULSA OTRA VEZ';
+      resetTimer = setTimeout(() => { resetTimer = null; btnReset.textContent = 'BORRAR PROGRESO'; }, 4000);
+      return;
     }
+    clearTimeout(resetTimer); resetTimer = null;
+    btnReset.textContent = 'BORRAR PROGRESO';
+    save = defaultSave();
+    persist();
+    menuStartTier = 'continue';
+    buildMenu();
   });
   document.getElementById('btnResume').addEventListener('click', resume);
   document.getElementById('btnQuit').addEventListener('click', toMenu);

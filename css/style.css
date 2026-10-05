@@ -8,6 +8,7 @@
   --cyan: #4fd8ff;
   --red: #ff4d6d;
   --font: 'Press Start 2P', 'Courier New', ui-monospace, monospace;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
