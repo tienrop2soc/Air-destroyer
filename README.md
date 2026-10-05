@@ -9,7 +9,7 @@ Abre `index.html` en el navegador (o sirve la carpeta con cualquier servidor est
 
 | Acción | Teclado | Táctil / ratón |
 | --- | --- | --- |
-| Mover | Flechas / WASD | Arrastrar sobre el juego |
+| Mover | Flechas / WASD | Arrastrar un dedo en cualquier punto de la pantalla (toda la pantalla es el mando) |
 | Disparar | Automático | Automático |
 | Bomba | Espacio / B / X | Botón BOMBA |
 | Pausa | P / Esc | Botón II |
@@ -27,6 +27,12 @@ Hay que servirla por HTTPS (por ejemplo con GitHub Pages, ver abajo) y abrirla e
 **Publicar con GitHub Pages:** en el repositorio, *Settings → Pages → Source: GitHub Actions*.
 El workflow `.github/workflows/pages.yml` publica el juego en cada push.
 Al cambiar archivos, sube `VERSION` en `sw.js` para que las apps instaladas se actualicen.
+
+## Pantallas anchas (iPad horizontal)
+
+El campo de juego se ensancha para ocupar toda la pantalla (hasta 560 píxeles lógicos de ancho) y la
+frecuencia de enemigos se ajusta al ancho. En vertical (iPhone) no cambia. El ancho solo se recalcula
+al empezar un nivel o en el menú, no a mitad de partida.
 
 ## Dónde se guarda el progreso
 

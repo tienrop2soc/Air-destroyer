@@ -5,7 +5,9 @@
 (function () {
   'use strict';
 
-  const W = 240, H = 360;
+  const BASE_W = 240;
+  let W = BASE_W;               // ancho lógico: crece en pantallas anchas (iPad horizontal)
+  const H = 360;
   const B = Balance;
   const S = Sprites.build();
   const text = Sprites.drawText;
@@ -204,31 +206,58 @@
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, (e) => e.preventDefault()));
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  canvas.addEventListener('pointerdown', (e) => {
+  // Toda la pantalla es el mando: se arrastra con un dedo en cualquier punto y la nave
+  // se mueve en relación al movimiento del dedo (no salta hacia él ni queda tapada).
+  let activePointer = null;
+  document.addEventListener('pointerdown', (e) => {
     Sound.resume();
+    if (mode !== 'playing' || activePointer !== null) return;
+    if (e.target.closest && e.target.closest('button')) return;     // botones: pausa, sonido, bomba
+    activePointer = e.pointerId;
     pointer.active = true; pointer.lastX = e.clientX; pointer.lastY = e.clientY;
-    try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ok */ }
   });
-  canvas.addEventListener('pointermove', (e) => {
-    if (!pointer.active) return;
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== activePointer) return;
     pointer.dx += (e.clientX - pointer.lastX) / viewScale;
     pointer.dy += (e.clientY - pointer.lastY) / viewScale;
     pointer.lastX = e.clientX; pointer.lastY = e.clientY;
   });
-  const endPointer = () => { pointer.active = false; };
-  canvas.addEventListener('pointerup', endPointer);
-  canvas.addEventListener('pointercancel', endPointer);
+  const endPointer = (e) => {
+    if (e.pointerId !== activePointer) return;
+    activePointer = null; pointer.active = false;
+  };
+  document.addEventListener('pointerup', endPointer);
+  document.addEventListener('pointercancel', endPointer);
+  // iOS: evita el rebote/desplazamiento de la página mientras se juega
+  document.addEventListener('touchmove', (e) => { if (mode === 'playing') e.preventDefault(); }, { passive: false });
 
-  function resize() {
-    const avail = Math.min(window.innerWidth / W, window.innerHeight / H);
-    // Escala con píxeles nítidos (múltiplos de 0.5) salvo que se pierda más de un 8 % de pantalla
-    const snapped = Math.floor(avail * 2) / 2;
-    viewScale = avail >= 1 && snapped >= avail * 0.92 ? snapped : avail;
-    canvas.style.width = Math.floor(W * viewScale) + 'px';
-    canvas.style.height = Math.floor(H * viewScale) + 'px';
+  // Ajusta el tamaño del canvas. En pantallas anchas (iPad horizontal) el campo de juego
+  // se ensancha para ocupar toda la pantalla; en vertical (iPhone) no cambia.
+  // El ancho solo cambia fuera de partida, para no mover a los enemigos a mitad de nivel.
+  function layout(allowWidthChange) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (allowWidthChange) {
+      const wide = vw / vh > 0.75;
+      const nw = wide ? clamp(Math.ceil(vw / (vh / H)), BASE_W, 560) : BASE_W;
+      if (nw !== W) {
+        W = nw;
+        canvas.width = W;                     // reinicia el contexto
+        ctx.imageSmoothingEnabled = false;
+        if (bgState.levelIdx >= 0) setupBackground(bgState.levelIdx);
+      }
+    }
+    const avail = Math.min(vw / W, vh / H);
+    if (W === BASE_W) {
+      // Escala con píxeles nítidos (múltiplos de 0.5) salvo que se pierda más de un 8 % de pantalla
+      const snapped = Math.floor(avail * 2) / 2;
+      viewScale = avail >= 1 && snapped >= avail * 0.92 ? snapped : avail;
+    } else {
+      viewScale = avail;                      // pantalla ancha: ocupar toda la pantalla
+    }
+    canvas.style.width = Math.ceil(W * viewScale) + 'px';
+    canvas.style.height = Math.ceil(H * viewScale) + 'px';
   }
-  window.addEventListener('resize', resize);
-  resize();
+  window.addEventListener('resize', () => layout(mode !== 'playing' && mode !== 'paused'));
 
   /* ================================================================== */
   /* Estado de la partida                                               */
@@ -246,12 +275,12 @@
     bgState.stars = [];
     const layers = [{ n: 40, sp: 8, a: 0.4 }, { n: 28, sp: 20, a: 0.7 }, { n: 14, sp: 42, a: 1 }];
     layers.forEach((l, li) => {
-      for (let i = 0; i < l.n; i++) bgState.stars.push({ x: Math.random() * W, y: Math.random() * H, sp: l.sp * rand(0.8, 1.2), a: l.a, big: li === 2 && Math.random() < 0.4 });
+      for (let i = 0, n = Math.round(l.n * W / BASE_W); i < n; i++) bgState.stars.push({ x: Math.random() * W, y: Math.random() * H, sp: l.sp * rand(0.8, 1.2), a: l.a, big: li === 2 && Math.random() < 0.4 });
     });
     bgState.decor = [];
     const bd = S.backdrops[levelIdx];
     if (bd.decor.length) {
-      for (let i = 0; i < 3; i++) spawnDecor(i * 130 + rand(0, 40));
+      for (let i = 0; i < 3 + Math.floor(W / 400); i++) spawnDecor(i * 130 + rand(0, 40));
     }
   }
 
@@ -271,7 +300,7 @@
     bgState.decor.forEach(d => { d.y += d.sp * dt * speedMul; });
     bgState.decor = bgState.decor.filter(d => d.y < H + 4);
     const bd = S.backdrops[bgState.levelIdx];
-    if (bd.decor.length && bgState.decor.length < 3 && Math.random() < dt * 0.6 &&
+    if (bd.decor.length && bgState.decor.length < 3 + Math.floor(W / 400) && Math.random() < dt * 0.6 &&
         bgState.decor.every(d => d.y > 60)) spawnDecor(0);
   }
 
@@ -303,6 +332,8 @@
   /* Inicio / fin de partida                                            */
   /* ================================================================== */
   function startRun(levelIdx, startTier) {
+    layout(true);
+    activePointer = null;
     const level = LEVELS[levelIdx];
     const tier = Math.max(DEBUG.tier, startTier || 0, level.baseTier);
     const stats = B.playerStats(tier, 0);
@@ -382,6 +413,7 @@
   function pause() {
     if (mode !== 'playing') return;
     mode = 'paused';
+    activePointer = null; pointer.active = false;
     Sound.music(null);
     showScreen('pause');
   }
@@ -395,6 +427,8 @@
     commitRun();
     mode = 'menu';
     G = null;
+    activePointer = null;
+    layout(true);
     document.body.classList.remove('playing');
     Sound.music(null);
     buildMenu();
@@ -504,7 +538,7 @@
       }
     }
     const ramp = 1 + (G.bossClock / BOSS_INTERVAL) * 0.6;
-    const rate = G.escale.spawn * ramp * (G.boss ? 0.3 : 1);
+    const rate = G.escale.spawn * ramp * (G.boss ? 0.3 : 1) * (0.2 + 0.8 * W / BASE_W);
     G.spawnT -= dt;
     if (G.spawnT <= 0) {
       spawnWave();
@@ -709,7 +743,7 @@
         break;
       }
       case 'rain':
-        for (let i = 0; i < 1 + (extra > 1 ? 1 : 0); i++) {
+        for (let i = 0, n = Math.round((1 + (extra > 1 ? 1 : 0)) * W / BASE_W); i < n; i++) {
           G.ebullets.push({ x: rand(6, W - 6), y: -2, vx: 0, vy: rand(70, 110) * es.bulletSpeed, big: false, r: 2 });
         }
         break;
@@ -747,7 +781,7 @@
       return;
     }
     // luchando
-    b.x = W / 2 + Math.sin(b.t * b.def.speed * G.escale.speed) * b.def.amp;
+    b.x = W / 2 + Math.sin(b.t * b.def.speed * G.escale.speed) * b.def.amp * Math.min(2, W / BASE_W);
     b.y = 62 + Math.sin(b.t * 0.9) * 4;
     const frac = b.hp / b.maxhp;
     const phase = frac > 0.66 ? 0 : frac > 0.33 ? 1 : 2;
@@ -915,7 +949,7 @@
       if (keys['arrowright'] || keys['d']) dx += 1;
       if (keys['arrowup'] || keys['w']) dy -= 1;
       if (keys['arrowdown'] || keys['s']) dy += 1;
-      const sp = 120;
+      const sp = 120 * Math.min(1.5, 0.6 + W / 600);
       const len = Math.hypot(dx, dy) || 1;
       p.x += dx / len * sp * dt + pointer.dx;
       p.y += dy / len * sp * dt + pointer.dy;
@@ -1428,6 +1462,7 @@
     startRun, endRun, pause, B, LEVELS, update, forceBoss() { if (G) G.bossClock = BOSS_INTERVAL; },
   };
 
+  layout(true);
   buildMenu();
   showScreen('menu');
   requestAnimationFrame(frame);
