@@ -78,14 +78,26 @@
 
       <h2>Sonido</h2>
       <button id="setMute" class="big alt slim"></button>
-      <label class="setting" for="setSfx"><span>Efectos</span><output id="outSfx"></output></label>
-      <input id="setSfx" type="range" min="0" max="100" step="5">
-      <label class="setting" for="setMusic"><span>Música</span><output id="outMusic"></output></label>
-      <input id="setMusic" type="range" min="0" max="100" step="5">
+      <label class="setting" id="setSfxLabel"><span>Efectos</span><output id="outSfx"></output></label>
+      <div class="ctl" id="setSfx" data-key="sfx" data-min="0" data-max="100" data-step="10">
+        <button type="button" class="step minus" aria-label="Menos efectos">−</button>
+        <div class="bar" role="slider" tabindex="0" aria-label="Efectos" aria-valuemin="0" aria-valuemax="100"><div class="fill"></div></div>
+        <button type="button" class="step plus" aria-label="Más efectos">+</button>
+      </div>
+      <label class="setting" id="setMusicLabel"><span>Música</span><output id="outMusic"></output></label>
+      <div class="ctl" id="setMusic" data-key="music" data-min="0" data-max="100" data-step="10">
+        <button type="button" class="step minus" aria-label="Menos música">−</button>
+        <div class="bar" role="slider" tabindex="0" aria-label="Música" aria-valuemin="0" aria-valuemax="100"><div class="fill"></div></div>
+        <button type="button" class="step plus" aria-label="Más música">+</button>
+      </div>
 
       <h2>Control</h2>
-      <label class="setting" for="setSens"><span>Sensibilidad</span><output id="outSens"></output></label>
-      <input id="setSens" type="range" min="50" max="200" step="5">
+      <label class="setting" id="setSensLabel"><span>Sensibilidad</span><output id="outSens"></output></label>
+      <div class="ctl" id="setSens" data-key="sens" data-min="50" data-max="200" data-step="10">
+        <button type="button" class="step minus" aria-label="Menos sensibilidad">−</button>
+        <div class="bar" role="slider" tabindex="0" aria-label="Sensibilidad" aria-valuemin="50" aria-valuemax="200"><div class="fill"></div></div>
+        <button type="button" class="step plus" aria-label="Más sensibilidad">+</button>
+      </div>
       <p class="note">Cuánto se mueve la nave al arrastrar el dedo (o con las teclas). Más alta = la nave recorre más pantalla con menos movimiento. 100 % es el valor normal.</p>
 
       <button id="btnSettingsReset" class="big alt slim">RESTABLECER</button>

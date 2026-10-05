@@ -1375,7 +1375,7 @@
     }
     const t = save.totals;
     document.getElementById('totals').textContent =
-      'Jefes derrotados: ' + t.bosses + '  ·  Enemigos destruidos: ' + t.kills + '  ·  Partidas: ' + t.plays + '  ·  Tiempo: ' + fmtTime(t.time);
+      'Jefes derrotados: ' + t.bosses + '  ·  Enemigos destruidos: ' + t.kills + '  ·  Partidas: ' + t.plays + '  ·  Tiempo: ' + fmtTime(t.time) + '  ·  v9';
     document.getElementById('menuMute').textContent = save.muted ? 'SONIDO: NO' : 'SONIDO: SÍ';
     document.getElementById('btnMute').classList.toggle('off', save.muted);
   }
@@ -1416,17 +1416,33 @@
 
   /* --- Ajustes --- */
   let settingsFrom = 'menu';
-  const sliders = [
-    { id: 'setSfx', key: 'sfx', out: 'outSfx', fmt: v => v + '%', preview: () => { Sound.resume(); Sound.sfx.explode(); } },
-    { id: 'setMusic', key: 'music', out: 'outMusic', fmt: v => v + '%', preview: () => { Sound.resume(); Sound.sfx.musicPreview(); } },
-    { id: 'setSens', key: 'sens', out: 'outSens', fmt: v => v + '%', preview: null },
-  ];
+  // Controles de ajuste propios (barra + botones − / +): se ven y funcionan igual en cualquier navegador.
+  const ctls = [
+    { id: 'setSfx', out: 'outSfx', preview: () => { Sound.resume(); Sound.sfx.explode(); } },
+    { id: 'setMusic', out: 'outMusic', preview: () => { Sound.resume(); Sound.sfx.musicPreview(); } },
+    { id: 'setSens', out: 'outSens', preview: null },
+  ].map(c => {
+    const el = document.getElementById(c.id);
+    c.el = el;
+    c.key = el.dataset.key;
+    c.min = +el.dataset.min; c.max = +el.dataset.max; c.step = +el.dataset.step;
+    c.bar = el.querySelector('.bar'); c.fill = el.querySelector('.fill');
+    return c;
+  });
+  function paintCtl(c) {
+    const v = save.settings[c.key];
+    c.fill.style.width = ((v - c.min) / (c.max - c.min) * 100) + '%';
+    c.bar.setAttribute('aria-valuenow', v);
+    document.getElementById(c.out).textContent = v + '%';
+  }
+  function setCtl(c, v) {
+    v = clamp(Math.round(v / c.step) * c.step, c.min, c.max);
+    save.settings[c.key] = v;
+    paintCtl(c);
+    Sound.setVolumes(save.settings.sfx, save.settings.music);
+  }
   function syncSettingsUI() {
-    sliders.forEach(sl => {
-      const el = document.getElementById(sl.id);
-      el.value = save.settings[sl.key];
-      document.getElementById(sl.out).textContent = sl.fmt(save.settings[sl.key]);
-    });
+    ctls.forEach(paintCtl);
     document.getElementById('setMute').textContent = save.muted ? 'SONIDO: NO' : 'SONIDO: SÍ';
   }
   function openSettings(from) {
@@ -1434,14 +1450,24 @@
     syncSettingsUI();
     showScreen('settings');
   }
-  sliders.forEach(sl => {
-    const el = document.getElementById(sl.id);
-    el.addEventListener('input', () => {
-      save.settings[sl.key] = parseInt(el.value, 10);
-      document.getElementById(sl.out).textContent = sl.fmt(save.settings[sl.key]);
-      Sound.setVolumes(save.settings.sfx, save.settings.music);
+  ctls.forEach(c => {
+    const done = () => { persist(); if (c.preview) c.preview(); };
+    c.el.querySelector('.minus').addEventListener('click', () => { setCtl(c, save.settings[c.key] - c.step); done(); });
+    c.el.querySelector('.plus').addEventListener('click', () => { setCtl(c, save.settings[c.key] + c.step); done(); });
+    const fromX = (e) => {
+      const r = c.bar.getBoundingClientRect();
+      setCtl(c, c.min + clamp((e.clientX - r.left) / r.width, 0, 1) * (c.max - c.min));
+    };
+    let dragging = null;
+    c.bar.addEventListener('pointerdown', (e) => { dragging = e.pointerId; try { c.bar.setPointerCapture(e.pointerId); } catch (err) { /* ok */ } fromX(e); });
+    c.bar.addEventListener('pointermove', (e) => { if (dragging === e.pointerId) fromX(e); });
+    const end = (e) => { if (dragging === e.pointerId) { dragging = null; done(); } };
+    c.bar.addEventListener('pointerup', end);
+    c.bar.addEventListener('pointercancel', end);
+    c.bar.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : 0;
+      if (d) { e.preventDefault(); e.stopPropagation(); setCtl(c, save.settings[c.key] + d * c.step); done(); }
     });
-    el.addEventListener('change', () => { persist(); if (sl.preview) sl.preview(); });
   });
   document.getElementById('setMute').addEventListener('click', () => { Sound.resume(); toggleMute(); syncSettingsUI(); });
   document.getElementById('btnSettingsReset').addEventListener('click', () => {

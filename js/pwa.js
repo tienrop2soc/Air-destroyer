@@ -6,6 +6,12 @@
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () {
+      // Si ya había una versión instalada y llega una nueva, recarga una vez para usarla.
+      const had = !!navigator.serviceWorker.controller;
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (had && !reloaded) { reloaded = true; location.reload(); }
+      });
       navigator.serviceWorker.register('sw.js').catch(function () { /* sin SW: sigue funcionando online */ });
     });
   }

@@ -1,6 +1,6 @@
 /* Service worker: la app funciona sin conexión.
  * Sube VERSION cuando cambies archivos para que los móviles descarguen la nueva versión. */
-const VERSION = 'air-destroyer-v8';
+const VERSION = 'air-destroyer-v9';
 const SHELL = [
   './', './index.html', './css/style.css', './manifest.webmanifest',
   './js/balance.js', './js/sprites.js', './js/audio.js', './js/game.js', './js/pwa.js',
@@ -8,7 +8,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

@@ -266,12 +266,21 @@ button { touch-action: manipulation; }
 .big.slim { font-size: 10px; padding: 12px; margin-top: 12px; }
 .setting { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; margin: 16px 0 8px; color: var(--text); }
 .setting output { color: var(--gold); }
-input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; background: transparent; touch-action: pan-y; cursor: pointer; margin: 0; }
-input[type=range]::-webkit-slider-runnable-track { height: 10px; background: #070b2a; border: 2px solid var(--line); }
-input[type=range]::-moz-range-track { height: 10px; background: #070b2a; border: 2px solid var(--line); }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 30px; margin-top: -12px; background: var(--gold); border: 3px solid #fff2b0; box-shadow: 0 3px 0 #a06a00; }
-input[type=range]::-moz-range-thumb { width: 16px; height: 24px; background: var(--gold); border: 3px solid #fff2b0; border-radius: 0; }
-input[type=range]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+/* Control de ajuste: [-] barra [+] */
+.ctl { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.ctl .step {
+  flex: none; width: 44px; height: 44px; font-size: 20px; line-height: 1; color: var(--text);
+  background: #1a2670; border: 2px solid #4a5cd0; cursor: pointer; padding: 0; touch-action: manipulation;
+}
+.ctl .step:hover { background: #26359c; }
+.ctl .step:active { transform: translateY(2px); }
+.ctl .bar {
+  position: relative; flex: 1; height: 30px; background: #070b2a; border: 2px solid var(--line);
+  cursor: pointer; touch-action: none;
+}
+.ctl .bar:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.ctl .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: var(--gold); pointer-events: none; }
+.ctl .fill::after { content: ''; position: absolute; right: -3px; top: -5px; bottom: -5px; width: 6px; background: #fff2b0; }
 
 /* Botón de ajustes siempre visible arriba del menú */
 .panel { position: relative; }
