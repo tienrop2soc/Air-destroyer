@@ -21,7 +21,7 @@ Es una app web instalable que funciona sin conexión y a pantalla completa.
 Hay que servirla por HTTPS (por ejemplo con GitHub Pages, ver abajo) y abrirla en el móvil:
 
 - **Android / Chrome:** botón *INSTALAR APP* del menú, o menú ⋮ → *Instalar aplicación*.
-- **iPhone / Safari:** *Compartir* → *Añadir a pantalla de inicio*.
+- **iPad / iPhone (Safari):** *Compartir* (cuadrado con flecha) → *Añadir a pantalla de inicio*. Se abre a pantalla completa, en vertical u horizontal, y funciona sin conexión. Nota: la app instalada guarda el progreso por separado del que tengas en la pestaña de Safari.
 - **PC (Chrome/Edge):** icono de instalar en la barra de direcciones.
 
 **Publicar con GitHub Pages:** en el repositorio, *Settings → Pages → Source: GitHub Actions*.

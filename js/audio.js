@@ -24,10 +24,22 @@
     } catch (e) { ac = null; }
   }
 
+  let unlocked = false;
   function resume() {
     init();
-    if (ac && ac.state === 'suspended') ac.resume();
+    if (!ac) return;
+    if (ac.state === 'suspended' || ac.state === 'interrupted') ac.resume();
+    if (!unlocked) {                       // iOS: hay que reproducir algo dentro de un gesto
+      unlocked = true;
+      const b = ac.createBuffer(1, 1, 22050);
+      const src = ac.createBufferSource();
+      src.buffer = b; src.connect(ac.destination); src.start(0);
+    }
   }
+  // iOS solo desbloquea el audio con touchend/click (no con pointerdown)
+  ['touchend', 'click', 'keydown'].forEach(function (ev) {
+    root.addEventListener(ev, resume, { passive: true });
+  });
 
   function tone(type, f0, f1, dur, vol, delay) {
     if (!ac) return;

@@ -179,6 +179,10 @@
   ctx.imageSmoothingEnabled = false;
   let viewScale = 2;
 
+  // iPad/iOS: sin zoom por pellizco, sin menú contextual en pulsación larga
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, (e) => e.preventDefault()));
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
   canvas.addEventListener('pointerdown', (e) => {
     Sound.resume();
     pointer.active = true; pointer.lastX = e.clientX; pointer.lastY = e.clientY;
@@ -196,7 +200,9 @@
 
   function resize() {
     const avail = Math.min(window.innerWidth / W, window.innerHeight / H);
-    viewScale = avail >= 1 ? Math.floor(avail * 2) / 2 : avail;
+    // Escala con píxeles nítidos (múltiplos de 0.5) salvo que se pierda más de un 8 % de pantalla
+    const snapped = Math.floor(avail * 2) / 2;
+    viewScale = avail >= 1 && snapped >= avail * 0.92 ? snapped : avail;
     canvas.style.width = Math.floor(W * viewScale) + 'px';
     canvas.style.height = Math.floor(H * viewScale) + 'px';
   }

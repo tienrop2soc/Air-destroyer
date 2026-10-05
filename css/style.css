@@ -24,6 +24,8 @@ html, body {
   user-select: none;
   touch-action: none;
   overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #stage {
@@ -226,3 +228,15 @@ button { font-family: var(--font); }
 #result p.go { color: var(--cyan); }
 #result .newrec { font-style: normal; font-size: 9px; color: var(--cyan); animation: blink 0.8s steps(2) infinite; }
 .level .info b i { font-style: normal; color: #7dff6b; font-size: 7px; margin-left: 6px; white-space: nowrap; }
+
+button { touch-action: manipulation; }
+
+/* iPad y pantallas grandes: menús y botones más grandes */
+@media (min-width: 700px) {
+  .panel { zoom: 1.3; }
+  .panel.small { zoom: 1.5; }
+  #hudbtns button { font-size: 14px; padding: 16px 20px; }
+}
+@media (min-width: 700px) and (hover: none) {
+  #hudbtns { left: auto; transform: none; opacity: 1; right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+}

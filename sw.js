@@ -1,10 +1,10 @@
 /* Service worker: la app funciona sin conexión.
  * Sube VERSION cuando cambies archivos para que los móviles descarguen la nueva versión. */
-const VERSION = 'air-destroyer-v2';
+const VERSION = 'air-destroyer-v4';
 const SHELL = [
   './', './index.html', './css/style.css', './manifest.webmanifest',
   './js/balance.js', './js/sprites.js', './js/audio.js', './js/game.js', './js/pwa.js',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/apple-touch-icon-152.png', './icons/apple-touch-icon-167.png', './icons/favicon-32.png',
 ];
 
 self.addEventListener('install', (e) => {
