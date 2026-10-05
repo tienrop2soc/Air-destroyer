@@ -2,8 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#04061a">
+  <meta name="description" content="Juego de naves retro con vista cenital: destruye ovnis y alienígenas, derrota jefes y sube de rango.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Air Destroyer">
   <title>Air Destroyer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,9 +52,11 @@
         Bomba: ESPACIO / B · Pausa: P · Sonido: M<br>
         Cada <b>5 minutos</b> aparece un jefe. Al destruirlo tus armas suben de nivel, pero los enemigos y jefes también se vuelven más duros.
       </div>
+      <p id="installHint" class="help hidden">Para instalarla en iPhone/iPad: pulsa <b>Compartir</b> y luego <b>Añadir a pantalla de inicio</b>.</p>
       <div class="foot">
         <span id="totals"></span>
         <span class="footBtns">
+          <button id="btnInstall" class="link install hidden">INSTALAR APP</button>
           <button id="menuMute" class="link"></button>
           <button id="btnReset" class="link">BORRAR PROGRESO</button>
         </span>
@@ -78,5 +88,6 @@
   <script src="js/sprites.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/pwa.js"></script>
 </body>
 </html>

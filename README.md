@@ -15,6 +15,19 @@ Abre `index.html` en el navegador (o sirve la carpeta con cualquier servidor est
 | Pausa | P / Esc | Botón II |
 | Sonido | M | Botón ♪ |
 
+## Instalar como app (PWA)
+
+Es una app web instalable que funciona sin conexión y a pantalla completa.
+Hay que servirla por HTTPS (por ejemplo con GitHub Pages, ver abajo) y abrirla en el móvil:
+
+- **Android / Chrome:** botón *INSTALAR APP* del menú, o menú ⋮ → *Instalar aplicación*.
+- **iPhone / Safari:** *Compartir* → *Añadir a pantalla de inicio*.
+- **PC (Chrome/Edge):** icono de instalar en la barra de direcciones.
+
+**Publicar con GitHub Pages:** en el repositorio, *Settings → Pages → Source: GitHub Actions*.
+El workflow `.github/workflows/pages.yml` publica el juego en cada push.
+Al cambiar archivos, sube `VERSION` en `sw.js` para que las apps instaladas se actualicen.
+
 ## Qué incluye
 
 - **5 naves** a elegir (solo estética): Halcón, Víbora, Fénix, Tempestad y Eclipse.
@@ -29,6 +42,7 @@ Abre `index.html` en el navegador (o sirve la carpeta con cualquier servidor est
 
 ```
 index.html        pantalla, menús (DOM) y canvas
+manifest.webmanifest, sw.js, icons/, js/pwa.js   app instalable y modo sin conexión
 css/style.css     estilo retro de menús y botones
 js/balance.js     fórmulas de dificultad y poder del jugador
 js/sprites.js     pixel art generado por código + fuente de píxeles
